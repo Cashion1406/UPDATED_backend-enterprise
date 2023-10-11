@@ -137,6 +137,7 @@ public class Client implements UserDetails {
 
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role.grantedAuthorities();
     }

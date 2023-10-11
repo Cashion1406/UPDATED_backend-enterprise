@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,14 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "404E635266556A58E327235753872F413F4428472B4B6250645367566B5970";
+    @Value("${security.jwt.secret-key}")
+    private String SECRET_KEY;
+
+    @Value("${security.jwt.secret-key.expiration}")
+    private long jwtExp;
+
+    @Value("${security.jwt.refresh-token.expiration}")
+    private long refreshTokenExp;
 
 
     public String getEmailFromJwt(String token) {
@@ -33,19 +41,31 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+//
+//        Calendar calendar = Calendar.getInstance();
+//        Date now = calendar.getTime();
+////
+////        // Add one day to the current time to calculate the expiration time
+////        calendar.setTime(now);
+////        calendar.add(Calendar.DAY_OF_MONTH, 1);
+////        Date expirationTime = calendar.getTime();
 
-        Calendar calendar = Calendar.getInstance();
-        Date now = calendar.getTime();
+        extraClaims.put("password",userDetails.getPassword());
+        return buildToken(extraClaims, userDetails, jwtExp);
+    }
 
-        // Add one day to the current time to calculate the expiration time
-        calendar.setTime(now);
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        Date expirationTime = calendar.getTime();
+    public String generateRefreshToken(UserDetails userDetails) {
+
+
+        return buildToken(new HashMap<>(), userDetails, refreshTokenExp);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expirationTime) {
         return Jwts
                 .builder().setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(expirationTime)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigninKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

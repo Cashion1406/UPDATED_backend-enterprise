@@ -13,11 +13,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 
 @Configuration
@@ -28,6 +28,7 @@ public class SecurityConfig {
 
 
     private final JwtFilter authenticationFilter;
+    private final LogoutHandler logoutHandler;
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -36,7 +37,7 @@ public class SecurityConfig {
                 .csrf()
                 .disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/client/**")
+                .requestMatchers("/authen/**")
                 .permitAll()
 //                .requestMatchers("/artist/**").hasRole(ARTIST.name())
 //                .requestMatchers(HttpMethod.GET, "/artist/**").hasAuthority(ARTIST_READ.name())
@@ -50,7 +51,14 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout()
+                .logoutUrl("/client/logout")
+                .addLogoutHandler(logoutHandler)
+                .logoutSuccessHandler(((request, response, authentication) ->
+                        SecurityContextHolder.clearContext()
+                ))
+        ;
         return httpSecurity.build();
     }
 }

@@ -7,6 +7,7 @@ import com.example.demo.DTO.Client.Client_Topic_Request;
 import com.example.demo.DTO.ClientReaction;
 import com.example.demo.DTO.DeleteResponse;
 import com.example.demo.DTO.FollowTopic;
+import com.example.demo.DTO.UpdatePassRequest;
 import com.example.demo.model.Client;
 import com.example.demo.model.Department;
 import com.example.demo.model.ERole;
@@ -15,32 +16,34 @@ import com.example.demo.repo.ClientRepo;
 import com.example.demo.repo.DepartmentRepo;
 import com.example.demo.repo.IdeaRepo;
 import com.example.demo.repo.TopicRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 
 @Service
+@RequiredArgsConstructor
 public class ClientService {
-    @Autowired
-    private ClientRepo clientRepo;
 
-    @Autowired
-    private DepartmentRepo departmentRepo;
+    private final ClientRepo clientRepo;
+    private final PasswordEncoder passwordEncoder;
 
 
-    @Autowired
-    private IdeaRepo ideaRepo;
-
-    @Autowired
-    private TopicRepo topicRepo;
+    private final DepartmentRepo departmentRepo;
 
 
+    private final IdeaRepo ideaRepo;
 
 
+    private final TopicRepo topicRepo;
 
 
     //Create User
@@ -81,8 +84,6 @@ public class ClientService {
 
         return clientRepo.getClientLastName(id);
     }
-
-
 
 
     //Delete User by Id
@@ -160,6 +161,28 @@ public class ClientService {
 
         return ideaRepo.getideabyclientid(id);
     }
+
+    public void changePassword(UpdatePassRequest updatePassRequest, Principal authenticatedUser) {
+
+
+        //First time cast a Principal into the UsernamePasswordAuthenticationToken object, then second cast into a Client object
+        var user = (Client) ((UsernamePasswordAuthenticationToken) authenticatedUser).getPrincipal();
+
+        // check if the current password is correct
+        if (!passwordEncoder.matches(updatePassRequest.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Wrong password");
+        }
+        // check if the two new passwords are the same
+        if (!updatePassRequest.getNewPassword().equals(updatePassRequest.getConfirmationPassword())) {
+            throw new IllegalStateException("Password are not the same");
+        }
+
+        user.setPassword(passwordEncoder.encode(updatePassRequest.getNewPassword()));
+
+        clientRepo.save(user);
+
+    }
+
 
 //    public List<ClientReaction> getClientReaction(String id) {
 //        return clientRepo.findClientReaction(id);

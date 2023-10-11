@@ -4,14 +4,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import static com.example.demo.model.ERole.ARTIST;
+
 
 @RestController
 @RequestMapping("/artist")
 @PreAuthorize("hasRole('ARTIST')")
 public class ArtistController {
     @GetMapping
-    @PreAuthorize("hasAuthority('artist:read')")
+    @PreAuthorize("hasAnyAuthority('artist:read')")
     public String get() {
         return "Get some artist info";
     }

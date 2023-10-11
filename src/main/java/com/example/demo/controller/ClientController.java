@@ -7,6 +7,7 @@ import com.example.demo.DTO.Authentication.AuthenticationResponse;
 import com.example.demo.DTO.Client.ClientDepartmentRequest;
 import com.example.demo.DTO.Client.ClientUpdateRequest;
 import com.example.demo.DTO.Client.Client_Topic_Request;
+
 import com.example.demo.model.Client;
 import com.example.demo.model.Idea;
 import com.example.demo.service.AuthenticationService;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,31 +38,26 @@ public class ClientController {
         return clientService.getAllClient();
     }
 
+//
+//    //create user info
+//    @PostMapping("/signup")
+//    @CrossOrigin(origins = "http://localhost:3000")
+//    public Client addClient(@RequestBody ClientDepartmentRequest client) {
+//
+//
+//        return clientService.saveClient(client);
+//    }
+//
 
+    @PatchMapping()
+    public ResponseEntity<?> changePassword(
+            @RequestBody UpdatePassRequest updatePassRequest,
+            Principal authentedUser) {
 
-    //create user info
-    @PostMapping("/signup")
-    @CrossOrigin(origins = "http://localhost:3000")
-    public Client addClient(@RequestBody ClientDepartmentRequest client) {
+        clientService.changePassword(updatePassRequest,authentedUser);
 
+        return ResponseEntity.ok("Password Updated");
 
-        return clientService.saveClient(client);
-    }
-
-    @PostMapping("/register")
-    @CrossOrigin(origins = "http://localhost:3000")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-
-
-        return ResponseEntity.ok(authenticationService.register(request));
-    }
-
-    @PostMapping("/authenticate")
-    @CrossOrigin(origins = "http://localhost:3000")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody AuthenticationRequest request) {
-
-
-        return ResponseEntity.ok(authenticationService.authen(request));
     }
 
     //get user detail with id
